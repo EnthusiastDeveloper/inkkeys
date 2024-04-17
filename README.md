@@ -7,6 +7,13 @@ If you have pull-requests, bug reports or want to contribute new case designs, p
 
 <a href="https://www.buymeacoffee.com/there.oughta.be" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" alt="Buy Me A Coffee" height="47" width="174" ></a>
 
+# Installation
+Installing on Linux requires several dependencies, some of which are not apparent without a bit of digging. Install them using the following command:
+
+```bash
+pip3 install -r requirements.txt
+```
+
 ## Common problems
 
 ### Display revision 2
@@ -17,22 +24,14 @@ Apparently, the original design used revision 1 of the display, while many newly
 >
 >PCB Pin Waveshare wiring loom
 >
->+5v Grey
->
->GND Brown
->
->DIN Blue
->
->CLK Yellow
->
->CS Orange
->
->DC Green
->
->RST Purple
->
->BUSY White
->
+>+5v Grey  
+>GND Brown  
+>DIN Blue  
+>CLK Yellow  
+>CS Orange  
+>DC Green  
+>RST Purple  
+>BUSY White  
 >In short you are swapping the RST & BUSY lines on the PCB.
 >
 >Next, go to your Arduino sketch. This is for the hardware-test script. Enable line numbering and go to line 43 which reads -
@@ -61,6 +60,10 @@ const byte PIN_BUSY = 14;
 >
 >The sketch will then compile and when uploaded to the board you will get the Waveshare drawing all sorts of Austin Powers time machine circles that make your eyes spin! 
 
+<br>
+
+#### Display V2 update issues:
+https://www.reddit.com/r/thereoughtabe/comments/s9sgox/inkkey_display_wont_update/htz2eg6/
 
 ## Gallery
 

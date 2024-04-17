@@ -1,0 +1,6 @@
+paho-mqtt
+pillow
+psutil
+pulsectl
+pyserial
+python-xlib
