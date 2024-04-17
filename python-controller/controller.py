@@ -35,10 +35,10 @@ GET_RUNNING_PROCESSES_INTERVAL = 5.0
 
 
 print("https://there.oughta.be/a/macro-keyboard")
-print('I will try to stay connected. Press Ctrl+c to quit.')
+print('I will try to stay connected. Press Ctrl+C to quit.')
 
 # Set address to "None" if you do not want to use mqtt
-mqtt = InkkeysMqtt("None", DEBUG)
+mqtt = InkkeysMqtt(None, DEBUG)
 
 # List of modes to be checked for in the main loop.
 # Each mode must be either a running process or an active window (compiled regex pattern)
@@ -84,12 +84,14 @@ def work():
                 window = get_active_window()
                 if window is not None:       # Ignore failures to get the active window fails.
                     if DEBUG and active_window != window:
-                        print("Active window: " + str(window))
+                        print(f'Active window: {window}')
                     active_window = window
                 # Get the first mode that matches the current active window or running process
                 first_matching_mode = list(filter(if_matching_mode, modes))[0]
                 # Only take action if the mode is different from the current one
                 if first_matching_mode["mode"] != current_mode:
+                    if DEBUG:
+                        print(f'Switching from mode "{current_mode}" to: {first_matching_mode["mode"].__class__.__name__}')
                     if current_mode is not None:
                         current_mode.deactivate(device)
                         device.send_led_animation(2, 50, 20, b=255, iteration=2)

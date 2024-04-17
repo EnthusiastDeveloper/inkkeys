@@ -14,15 +14,8 @@ class InkkeysMqtt:
     Class to handle MQTT communication.
     '''
     def __init__(self, server, debug=False):
-        self.client = mqtt.Client("inkkeys")
         self.server = server
         self.debug = debug
-
-        self.is_lights_on = False
-        self.lights_mqtt_topic = "zigbee2mqtt_octopi/plug_office"
-
-        self.co2 = 0
-        self.co2_mqtt_topic = "co2/data/update"
 
         def on_message(client, userdata, message):
             if message.topic == self.lights_mqtt_topic:
@@ -36,7 +29,15 @@ class InkkeysMqtt:
                 if self.debug:
                     print("CO2: " + str(self.co2))
 
-        self.client.on_message = on_message
+        if self.server is not None:
+            self.client = mqtt.Client("inkkeys")
+            self.client.on_message = on_message
+
+            self.is_lights_on = False
+            self.lights_mqtt_topic = "zigbee2mqtt_octopi/plug_office"
+
+            self.co2 = 0
+            self.co2_mqtt_topic = "co2/data/update"
 
     def connect(self):
         '''
