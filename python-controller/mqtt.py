@@ -1,36 +1,36 @@
-#These are some very specific things I do via MQTT:
-#- Switching a light in my office
-#- Reacting to a high CO2 level
+#!/usr/bin/env python3
 
-#If you do not want to use MQTT whatsoever, you should remove it from controller.py
+'''
+Specialized class to handle MQTT communication.
+This class is used by the main controller to communicate with an MQTT server.
+'''
 
-import paho.mqtt.client as mqtt
 import json
+# pylint: disable=import-error
+import paho.mqtt.client as mqtt
 
 class InkkeysMqtt:
-    client = None
-
-    server = None
-
-    lightOn = None
-    co2 = None
-    debug = False
-
-    plugTopic = "zigbee2mqtt_octopi/plug_office"
-    co2Topic = "co2/data/update"
-
+    '''
+    Class to handle MQTT communication.
+    '''
     def __init__(self, server, debug=False):
-        self.debug = debug
-        self.server = server
         self.client = mqtt.Client("inkkeys")
+        self.server = server
+        self.debug = debug
+
+        self.is_lights_on = False
+        self.lights_mqtt_topic = "zigbee2mqtt_octopi/plug_office"
+
+        self.co2 = 0
+        self.co2_mqtt_topic = "co2/data/update"
 
         def on_message(client, userdata, message):
-            if message.topic == self.plugTopic:
+            if message.topic == self.lights_mqtt_topic:
                 state = json.loads(str(message.payload.decode("utf-8")))
-                self.lightOn = state["state"] != "OFF"
+                self.is_lights_on = state["state"] != "OFF"
                 if self.debug:
-                    print("Light: " + str(self.lightOn))
-            elif message.topic == self.co2Topic:
+                    print("Light: " + str(self.is_lights_on))
+            elif message.topic == self.co2_mqtt_topic:
                 state = json.loads(str(message.payload.decode("utf-8")))
                 self.co2 = state["co2"]
                 if self.debug:
@@ -39,31 +39,43 @@ class InkkeysMqtt:
         self.client.on_message = on_message
 
     def connect(self):
-        if self.server == None:
+        '''
+        Connect to the MQTT server and subscribe to the topics.
+        '''
+        if self.server is None:
             return
         self.client.connect(self.server)
         self.client.loop_start()
-        self.client.subscribe(self.plugTopic)
-        self.client.subscribe(self.co2Topic)
-        self.client.publish(self.plugTopic + "/get",'{"state":""}')
+        self.client.subscribe(self.lights_mqtt_topic)
+        self.client.subscribe(self.co2_mqtt_topic)
+        self.client.publish(self.lights_mqtt_topic + "/get",'{"state":""}')
 
     def disconnect(self):
-        if self.server == None:
+        '''
+        Disconnect from the MQTT server.
+        This should be called before the program exits.
+        '''
+        if self.server is None:
             return
         self.client.loop_stop()
         self.client.disconnect()
 
-    def setLight(self, state):
-        if self.server == None:
+    def set_lights(self, state):
+        '''
+        Set the state of the lights.
+        '''
+        if self.server is None:
             return
-        self.client.publish(self.plugTopic + "/set",'{"state":' + ('"ON"' if state else '"OFF"') + '}')
+        self.client.publish(self.lights_mqtt_topic + "/set",'{"state":' + ('"ON"' if state else '"OFF"') + '}')
 
-    def getLight(self):
-        if self.server == None:
-            return None
-        return self.lightOn
+    def get_lights(self):
+        '''
+        Get the state of the lights.
+        '''
+        return self.is_lights_on if self.server is not None else None
 
-    def getCO2(self):
-        if self.server == None:
-            return None
-        return self.co2
+    def get_co2(self):
+        ''''
+        Get the CO2 level.
+        '''
+        return self.co2 if self.server is not None else None

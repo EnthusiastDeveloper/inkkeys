@@ -17,17 +17,19 @@ class CommandCode(Enum):
     LED = "L"
     REFRESH = "R"
     INFO = "I"
+    ANIMATE = "N"
 
 class RefreshTypeCode(Enum):
     PARTIAL = "p"
     FULL = "f"
+    RESET = "r"
     OFF = "o"
     
 class KeyCode(Enum):
     JOG_PRESS = "1p"
     JOG_RELEASE = "1r"
-    SW1_PRESS = "1p"   #Alias
-    SW1_RELEASE = "1r" #Alias
+    SW1_PRESS = "1p"   # Jog alias
+    SW1_RELEASE = "1r" # Jog alias
     SW2_PRESS = "2p"
     SW2_RELEASE = "2r"
     SW3_PRESS = "3p"
@@ -58,10 +60,10 @@ class DeviceCode(Enum):
     KEYBOARD = "k"
     MOUSE = "m"
 
-#DelayCode
+# DelayCode
 DELAY = "d"
 
-#Converted from HID-project: https://github.com/NicoHood/HID/blob/master/src/HID-APIs/ConsumerAPI.h
+# Converted from HID-project: https://github.com/NicoHood/HID/blob/master/src/HID-APIs/ConsumerAPI.h
 class ConsumerKeycode(Enum):
     CONSUMER_POWER = 0x30
     CONSUMER_SLEEP = 0x32
@@ -338,6 +340,3 @@ class MouseAxisCode(Enum):
     MOUSE_X = "x"
     MOUSE_Y = "y"
     MOUSE_WHEEL = "w"
-
-
-
