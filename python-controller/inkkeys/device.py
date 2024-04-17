@@ -166,7 +166,7 @@ class Device:
         Send an image to the controller to be displayed on the screen.
         '''
         if self.debug:
-            print(f"sendImage({x}, {y})")
+            print(f"send_image({x}, {y})")
         self.image_buffer.append({"x": x, "y": y, "image": image.copy()})
         w, h = image.size
         data = image.convert("1").rotate(180).tobytes()
@@ -179,7 +179,7 @@ class Device:
         Resend all of the image data from the buffer to buffer in the display.
         '''
         if self.debug:
-            print('resendImageData()')
+            print('resend_image_data()')
         for part in self.image_buffer:
             image = part['image']
             x = part['x']
@@ -202,7 +202,7 @@ class Device:
         '''
         with self.awaiting_response_lock:
             if self.debug:
-                print(f'updateDisplay(fullRefresh={full_refresh}, timeout={timeout})')
+                print(f'update_display(full_refresh={full_refresh}, timeout={timeout})')
             # Send the refresh command and wait for "ok" response until the timeout is up.
             start = time.time()
             self.send_to_device(CommandCode.REFRESH.value + " " + (RefreshTypeCode.FULL.value if full_refresh else RefreshTypeCode.PARTIAL.value))
@@ -269,36 +269,40 @@ class Device:
 
     def send_text_for(self, function, text, subtext="", inverted=False):
         if self.debug:
-            print(f'sendTextFor({function}, {text}, subtext={subtext}, inverted={inverted})')
-        x, y, w, h = self.get_area_for(function)
-        img = Image.new("1", (w, h), color=(0 if inverted else 1))
-        d = ImageDraw.Draw(img)
-        font1 = ImageFont.truetype("font/Munro.ttf", 10)
-        wt1, ht1 = font1.getsize(text)
-        font2 = ImageFont.truetype("font/MunroSmall.ttf", 10)
-        wt2, ht2 = font2.getsize_multiline(subtext)
+            print(f'send_text_for({function}, {text}, subtext={subtext}, inverted={inverted})')
+        _, _, width, height = self.get_area_for(function)
+        image = Image.new("1", (width, height), color=(0 if inverted else 1))
+        drawing = ImageDraw.Draw(image)
+        main_text_font = ImageFont.truetype("font/Munro.ttf", 10)
+        left, top, right, bottom = main_text_font.getbbox(text)
+        main_text_width = right - left
+        main_text_height = bottom - top
+
+        subtext_font = ImageFont.truetype("font/MunroSmall.ttf", 10)
+        left, top, right, bottom  = subtext_font.getbbox(subtext)
+        subtext_width = right - left
         if function in (1, 'title'):
             # Center jog wheel and title label (the title gets small -0.5 nudge for rounding to prefer a top alignment)
-            position1 = ((w-wt1)/2,(h-ht1-(0.5 if function == "title" else 0))/2)
+            position1 = ((width-main_text_width)/2, (height-main_text_height-(0.5 if function == "title" else 0))/2)
             position2 = None
         elif function < 6:
-            d.line([(0, h/2), (wt1, h/2)], fill=(1 if inverted else 0))
-            position1 = (0,h/2-ht1-2) # Align left
-            position2 = (0,h/2-1)
+            drawing.line([(0, height/2), (main_text_width, height/2)], fill=(1 if inverted else 0))
+            position1 = (0, height/2-main_text_height-2) # Align left
+            position2 = (0, height/2-1)
             align = 'left'
         else:
-            d.line([(w, h/2), (w-wt1, h/2)], fill=(1 if inverted else 0))
-            position1 = (w-wt1,h/2-ht1-2) # Align right
-            position2 = (w-wt2,h/2-1)
+            drawing.line([(width, height/2), (width-main_text_width, height/2)], fill=(1 if inverted else 0))
+            position1 = (width-main_text_width, height/2-main_text_height-2) # Align right
+            position2 = (width-subtext_width, height/2-1)
             align = 'right'
-        d.text(position1, text, font=font1, fill=(1 if inverted else 0))
+        drawing.text(position1, text, font=main_text_font, fill=(1 if inverted else 0))
         if position2 is not None and subtext is not None:
-            d.multiline_text(position2, subtext, font=font2, align=align, spacing=-2, fill=(1 if inverted else 0))
-        self.send_image_for(function, img)
+            drawing.multiline_text(position2, subtext, font=subtext_font, align=align, spacing=-2, fill=(1 if inverted else 0))
+        self.send_image_for(function, image)
 
     def send_icon_for(self, function, icon, inverted=False, centered=True, marked=False, crossed=False):
         if self.debug:
-            print(f'sendIconFor({icon}, inverted={inverted}, centered={centered}, marked={marked}, crossed={crossed})')
+            print(f'send_icon_for({icon}, inverted={inverted}, centered={centered}, marked={marked}, crossed={crossed})')
         x, y, w, h = self.get_area_for(function)
         img = Image.new("1", (w, h), color=(0 if inverted else 1))
         imgIcon = Image.open(icon).convert("RGB")
