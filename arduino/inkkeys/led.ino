@@ -8,6 +8,15 @@
 //LEDs
 Adafruit_NeoPixel leds = Adafruit_NeoPixel(N_LED, PIN_LED, NEO_RGB + NEO_KHZ400);
 
+int steps;
+int stepsRemaining = 0;
+uint8_t stepDelay = 0;
+unsigned long lastUpdate = 0;
+int animation = 0;
+int brightness = 0;
+uint32_t color;
+int iteration = 0;
+
 void initLEDs() {
   leds.begin();
   leds.setBrightness(100);
@@ -36,16 +45,76 @@ uint32_t hue2rgb(int hue) {
   return r << 16 | g << 8 | b;
 }
 
-//Short rainbow swirl on the LEDs as a greeting
-void ledGreeting(int steps) {
-  for (int i = 0; i < steps; i++) {
-    byte brightness = constrain(steps/2 - abs(i-steps/2), 0, 255);
-    for (int j = 0; j < N_LED; j++) {
-      leds.setPixelColor(j, dimmedColor(hue2rgb(i/2 + j*256/N_LED), brightness));
-    }
+void animateLeds(int a, int s, int d, int br, uint32_t c, int i) {
+  // A new animation is called.
+  if (a != animation) {
+    leds.clear();
     leds.show();
+    steps = s;
+    stepsRemaining = s;
+    stepDelay = d;
+    animation = a;
+    brightness = br;
+    color = c;
+    iteration = i;
   }
-  leds.clear();
+  //Short rainbow swirl on the LEDs as a greeting
+  if (a == animation) {
+    if (stepsRemaining == 0 && iteration > 1) {
+      stepsRemaining = steps;
+      iteration--;
+    }
+    if (stepsRemaining == 0) {
+      // Reset and turn animation off
+      steps = 0;
+      animation = 0;
+      stepDelay = 0;
+      leds.clear();
+      leds.show();
+    } else {
+      // Call the animation function.
+      switch (a) {
+        case 1:
+          ledGreeting();
+          break;
+        case 2:
+          ledBlink();
+          break;
+       
+      }
+    } 
+  }
+}
+
+// 1 - Short rainbow swirl on the LEDs as a greeting
+void ledGreeting() {
+  int i = steps - stepsRemaining;
+  byte brightness = constrain(steps/2 - abs(i-steps/2), 0, 255);
+  for (int j = 0; j < N_LED; j++) {
+    leds.setPixelColor(j, dimmedColor(hue2rgb(i/2 + j*256/N_LED), brightness));
+  }
   leds.show();
 }
 
+// 2 - Blink the LED blue
+void ledBlink() {
+  int i = steps - stepsRemaining;
+  int brightness = constrain(steps/2 - abs(i-steps/2), 0, 255);
+  for (int j = 0; j < N_LED; j++) {
+    leds.setPixelColor(j, color);
+    leds.setBrightness(brightness);
+  }
+  leds.show();
+}
+
+// Process the next step of any animation in progress.
+void processAnimation() {
+  if (animation > 0) {
+    unsigned long now = millis();
+    if (now > lastUpdate+stepDelay) {
+      animateLeds(animation, steps, stepDelay, brightness, color, iteration);
+      lastUpdate = now;
+      stepsRemaining--;
+    }
+  }
+}

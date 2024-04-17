@@ -30,7 +30,7 @@ GxEPD2_290 display(/*CS=*/ PIN_CS, /*DC=*/ PIN_DC, /*RST=*/ PIN_RST, /*BUSY=*/ P
 // Alternative classes: GxEPD2_290_T94 (V2 of the display), GxEPD2_290_T94_V2 (V2 when partial updates do not work)
 
 void initDisplay() {
-  display.init(0, true, 2, false);
+  display.init(115200, true, 2, false);
   display.writeScreenBuffer();
   display.refresh();
   display.writeScreenBufferAgain();
@@ -69,11 +69,12 @@ void setup() {
   SingleConsumer.begin();
 
   //Show LED greeting to confirm completion
-  ledGreeting(800);
+  animateLeds(1, 800, 10, 0, (0, 0, 0), 1);
   Serial.println("Ready.");
 }
 
 void loop() {
+  processAnimation();
   checkKeysAndReportChanges();
   checkRotaryEncoderAndReportChanges();
   handleSerialInput();

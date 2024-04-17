@@ -295,6 +295,11 @@ void processInfoCommand() {
   Serial.println(DISP_H);
   Serial.print("ROT_CIRCLE_STEPS ");
   Serial.println(ROT_CIRCLE_STEPS);
+  Serial.print("hasPartialUpdate: ");
+  Serial.println(display.hasPartialUpdate);
+  Serial.print("hasFastPartialUpdate: ");
+  Serial.println(display.hasFastPartialUpdate);
+  
   Serial.println("Done");
 }
 
@@ -310,7 +315,7 @@ void processLEDCommand() {
 }
 
 void processRefreshCommand() {
-  if (serialBufferCount != 3 || serialBuffer[1] != ' ' || (serialBuffer[2] != 'p' && serialBuffer[2] != 'f' && serialBuffer[2] != 'o')) {
+  if (serialBufferCount != 3 || serialBuffer[1] != ' ' || (serialBuffer[2] != 'p' && serialBuffer[2] != 'f' && serialBuffer[2] != 'o' && serialBuffer[2] != 'r')) {
     Serial.println("E: Bad format.");
     return;
   }
@@ -321,12 +326,89 @@ void processRefreshCommand() {
     case 'f':
       display.refresh(false);
       break;
+    case 'r':
+      display.clearScreen();
+      break;
     case 'o':
       display.powerOff();
       break;
   }
   Serial.println("ok");
 }
+
+void processAnimateCommand() {
+  if (serialBufferCount < 5 || serialBuffer[1] != ' ') {
+    Serial.println("E: Bad format.");
+    return;
+  }
+  byte b = 0;
+  byte r = 0;
+  byte g = 0;
+  byte br = 0;
+  byte i = 2;
+  int a = atoi(serialBuffer + i);
+  while (i < serialBufferCount && serialBuffer[i] >= '0' && serialBuffer[i] <= '9')
+    i++;
+  if (i+1 >= serialBufferCount || serialBuffer[i] != ' ') {
+    Serial.println("E: Bad format.");
+    return;
+  }
+  i++;
+  int s = atoi(serialBuffer + i);
+  while (i < serialBufferCount && serialBuffer[i] >= '0' && serialBuffer[i] <= '9')
+    i++;
+  if (i+1 >= serialBufferCount || serialBuffer[i] != ' ') {
+    Serial.println("E: Bad format.");
+    return;
+  }
+  i++;
+  int d = atoi(serialBuffer + i);
+
+  while (i < serialBufferCount && serialBuffer[i] >= '0' && serialBuffer[i] <= '9')
+    i++;
+  if (i+1 >= serialBufferCount || serialBuffer[i] != ' ') {
+    Serial.println("E: Bad format.");
+    return;
+  }
+  i++;
+  br = atoi(serialBuffer + i);
+  while (i < serialBufferCount && serialBuffer[i] >= '0' && serialBuffer[i] <= '9')
+  i++;
+  if (i+1 >= serialBufferCount || serialBuffer[i] != ' ') {
+    Serial.println("E: Bad format.");
+    return;
+  }
+  i++;
+  r = atoi(serialBuffer + i);
+  while (i < serialBufferCount && serialBuffer[i] >= '0' && serialBuffer[i] <= '9')
+    i++;
+  if (i+1 >= serialBufferCount || serialBuffer[i] != ' ') {
+    Serial.println("E: Bad format.");
+    return;
+  }
+  i++;
+  g = atoi(serialBuffer + i);
+  while (i < serialBufferCount && serialBuffer[i] >= '0' && serialBuffer[i] <= '9')
+    i++;
+  if (i+1 >= serialBufferCount || serialBuffer[i] != ' ') {
+    Serial.println("E: Bad format.");
+    return;
+  }
+  i++;
+  b = atoi(serialBuffer + i);
+  while (i < serialBufferCount && serialBuffer[i] >= '0' && serialBuffer[i] <= '9')
+    i++;
+  if (i+1 >= serialBufferCount || serialBuffer[i] != ' ') {
+    Serial.println("E: Bad format.");
+    return;
+  }
+  i++;
+  i = atoi(serialBuffer + i);
+
+  uint32_t c = ((uint32_t)g << 16) | ((uint32_t)r <<  8) | b;
+  animateLeds(a, s, d, br, c, i);
+}
+
 
 //Read from Serial in and react to enter (carriage return)
 void handleSerialInput() {
@@ -351,6 +433,9 @@ void handleSerialInput() {
             break;
           case 'L': //Set LEDs
             processLEDCommand();
+            break;
+          case 'N': //Animate LEDS
+            processAnimateCommand();
             break;
           case 'R': //Trigger refresh
             processRefreshCommand();
